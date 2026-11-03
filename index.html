@@ -132,6 +132,7 @@ body{background:var(--bg);color:var(--text);padding:12px;max-width:520px;margin:
 <button class="btn" style="width:100%;margin-top:10px;background:#fee2e2;color:#dc2626" onclick="deleteCurrent()">🗑️ Delete This</button>
 </div>
 </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -167,7 +168,6 @@ function saveEvent(){
   localStorage.setItem('evDate', document.getElementById('eventDate').value);
 }
 window.saveEvent=saveEvent;
-
 function saveLocal(){
   localStorage.setItem('media_final_v2', JSON.stringify(media));
   if(useCloud && navigator.onLine){
@@ -200,15 +200,17 @@ window.render=function(){
     const div=document.createElement('div');
     div.className='card'+(m.present?' present':'')+(m.kit?' kit':'');
     div.innerHTML=`
-      <div style="flex:1"><b style="font-size:13px">${m.name}</b> <small style="background:#e0e7ff;padding:2px 6px;border-radius:6px;font-size:10px">${m.category}</small><br>
+      <div style="flex:1;cursor:pointer" onclick="openEdit(${idx})"><b style="font-size:13px">${m.name}</b> <small style="background:#e0e7ff;padding:2px 6px;border-radius:6px;font-size:10px">${m.category}</small><br>
       <small style="font-size:11px;color:#64748b">${m.outlet} • ${m.phone||'No number'} ${m.kit?'• 🎁 Kit':''}</small><br>
       <small style="font-size:11px;color:#334155">${m.person? 'Came: '+m.person+' ('+m.desig+')':''} ${m.rep? '| Rep: '+m.rep:''}</small>
       ${m.time? `<br><small style="font-size:10px;color:#10b981">${m.time}</small>`:''}
       </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <div class="check ${m.present?'on':''}" onclick="togglePresent(${idx})">${m.present?'✓':''}</div>
-        <button class="icon-btn" onclick="openEdit(${idx})">✏️</button>
-        <button class="icon-btn" onclick="callMedia('${m.phone}')">📞</button>
+      <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:110px">
+        <div class="check ${m.present?'on':''}" onclick="event.stopPropagation();togglePresent(${idx})">${m.present?'✓':''}</div>
+        <button class="icon-btn" onclick="event.stopPropagation();openEdit(${idx})">✏️</button>
+        <button class="icon-btn" onclick="event.stopPropagation();callMedia('${m.phone}')">📞</button>
+        <button class="icon-btn" style="background:#dcfce7" onclick="event.stopPropagation();waMedia('${m.phone}','${m.name}')">💬</button>
+        <button class="icon-btn" style="background:#fee2e2" onclick="event.stopPropagation();if(confirm('Delete '+media[${idx}].name+'?')){media.splice(${idx},1);saveLocal();render();}">🗑️</button>
       </div>`;
     list.appendChild(div);
   });
@@ -219,6 +221,7 @@ window.render=function(){
 }
 window.togglePresent=function(i){media[i].present=!media[i].present; media[i].time=media[i].present? new Date().toLocaleString() : ""; saveLocal(); render();}
 window.callMedia=function(p){if(p) window.open('tel:'+p); else alert('No number');}
+window.waMedia=function(p,name){if(!p){alert('No number');return;} let num=p.replace(/[^0-9]/g,'').slice(-10); window.open('https://wa.me/91'+num+'?text=Hi '+encodeURIComponent(name)+'%2C%20you%20are%20invited%20for%20'+encodeURIComponent(document.getElementById('eventName').value||'our event')+'!');}
 window.addMedia=function(){
   const n=document.getElementById('newName').value.trim();
   const ph=document.getElementById('newPhone').value.trim();
