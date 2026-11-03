@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1fb35a">
+<title>Media Management</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a0a0a;color:#fff;font-family:system-ui}
+.h{background:#1fb35a;color:#000;padding:14px 16px;font-weight:900;font-size:18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.s{padding:12px;background:#151515;display:flex;gap:8px;position:sticky;top:53px;z-index:9}
+.s input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #333;background:#222;color:#fff}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}
+.btn-g{background:#1fb35a;color:#000}.btn-d{background:#222;color:#fff;border:1px solid #333}
+.f{display:flex;gap:8px;padding:10px 12px;overflow:auto;background:#101010}
+.f button{padding:8px 16px;border-radius:20px;border:1px solid #333;background:#222;color:#aaa;white-space:nowrap;font-weight:600}
+.f button.active{background:#1fb35a;color:#000;border-color:#1fb35a}
+.card{background:#1a1a1a;border:1px solid #262626;margin:10px 12px;border-radius:16px;padding:14px}
+.st{float:right;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:900}
+.st-Active{background:#1fb35a;color:#000}.st-Pending{background:#ffb84d;color:#000}.st-Invited{background:#3a3a3a;color:#fff}
+.fab{position:fixed;bottom:80px;right:20px;width:60px;height:60px;border-radius:50%;background:#1fb35a;color:#000;font-size:32px;border:0}
+.bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid #222;padding:10px 12px;display:flex;gap:8px}
+dialog{border:1px solid #333;background:#1e1e1e;color:#fff;border-radius:20px;width:92%;max-width:420px;padding:20px}
+dialog input,select,textarea{width:100%;padding:12px 14px;margin:7px 0;border-radius:12px;border:1px solid #333;background:#222;color:#fff}
+</style>
+</head>
+<body>
+<div class="h"><span>📺 Media Management</span><span id="total" style="background:#000;color:#1fb35a;padding:4px 10px;border-radius:20px;font-size:13px">0</span></div>
+<div class="s"><input id="q" placeholder="Search media..." oninput="render()"><button class="btn btn-g" onclick="openAdd()">+ ADD</button></div>
+<div class="f" id="filters"></div>
+<div id="list" style="padding-bottom:90px"></div>
+<div class="bar">
+<button class="btn btn-d" style="flex:1" onclick="exportCSV()">📄 CSV</button>
+<button class="btn btn-d" style="flex:1" onclick="exportWA()">💬 Share</button>
+<button class="btn btn-d" style="flex:1" onclick="resetData()">🔄 Reset 27</button>
+</div>
+<button class="fab" onclick="openAdd()">+</button>
+<dialog id="d"><h3 id="dt" style="margin:0 0 10px">Add Media</h3>
+<input id="mName" placeholder="Media Name *">
+<input id="mContact" placeholder="Contact Person">
+<input id="mPhone" placeholder="Phone">
+<select id="mCat"><option>News</option><option>Social</option><option>Print</option><option>Electronic</option><option>Digital</option><option>Radio</option></select>
+<select id="mStatus"><option>Active</option><option>Pending</option><option>Invited</option></select>
+<textarea id="mNote" placeholder="Notes..." rows="3"></textarea>
+<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-d" style="flex:1" onclick="d.close()">Cancel</button><button class="btn btn-g" style="flex:1" onclick="save()">Save</button></div>
+</dialog>
+<script>
+const DEFAULTS=["Dainik Bhaskar","Voice of Lucknow","Amar Ujala","Hindustan","Dainik Jagran","Aaj Tak","Zee News","ABP News","NDTV","India TV","News18 UP","UP Tak","Bharat Samachar","Local Reporter","Facebook Page","Instagram Page","YouTube Channel","WhatsApp Group","Radio City","Radio Mirchi","The Times of India","Patrika","Rajasthan Patrika","Prabhat Khabar","Khabar UP","Ground Reporter","Digital Media"];
+const CATS=["All","News","Social","Print","Electronic","Digital","Radio"];
+let data; try{data=JSON.parse(localStorage.getItem('media_management_pro')||'null')}catch(e){data=null}
+if(!data||!Array.isArray(data)||data.length<5){
+data=DEFAULTS.map((n,i)=>({id:i+1,name:n,cat:i<12?'News':i<18?'Social':'Digital',contact:'',phone:'',status:'Active',note:''}));
+localStorage.setItem('media_management_pro',JSON.stringify(data));
+}
+let curCat='All',editId=null;
+const q=document.getElementById('q'),list=document.getElementById('list'),total=document.getElementById('total'),d=document.getElementById('d'),filters=document.getElementById('filters');
+function saveStore(){localStorage.setItem('media_management_pro',JSON.stringify(data))}
+function renderFilters(){filters.innerHTML='';CATS.forEach(c=>{let b=document.createElement('button');b.textContent=c;if(curCat===c)b.className='active';b.onclick=()=>{curCat=c;renderFilters();render()};filters.appendChild(b)})}
+function render(){let s=q.value.toLowerCase();let f=data.filter(x=>{if(curCat!=='All'&&x.cat!==curCat)return false;if(!s)return true;return (x.name+' '+x.cat).toLowerCase().includes(s)});total.textContent=f.length+' / '+data.length;list.innerHTML=f.map(x=>`<div class=card><span class="st st-${x.status}">${x.status}</span><b>${x.name}</b><div style="font-size:12px;opacity:.55;margin:6px 0">${x.cat} ${x.contact?'• '+x.contact:''} ${x.phone?'• '+x.phone:''}</div><div style="display:flex;gap:8px;margin-top:10px"><button onclick="edit(${x.id})" style="flex:1;padding:10px;border-radius:10px;background:#222;color:#fff;border:1px solid #333">Edit</button><button onclick="del(${x.id})" style="flex:1;padding:10px;border-radius:10px;background:#222;color:#ff6b6b;border:1px solid #333">Delete</button></div></div>`).join('')||'<div style="padding:40px;text-align:center;opacity:.5">No media found</div>'}
+function openAdd(){editId=null;dt.textContent='Add Media';mName.value='';mContact.value='';mPhone.value='';mCat.value='News';mStatus.value='Active';mNote.value='';d.showModal()}
+function edit(id){let x=data.find(v=>v.id===id);editId=id;dt.textContent='Edit Media';mName.value=x.name;mContact.value=x.contact;mPhone.value=x.phone;mCat.value=x.cat;mStatus.value=x.status;mNote.value=x.note;d.showModal()}
+function save(){let name=mName.value.trim();if(!name){alert('Name required');return}let obj={id:editId||Date.now(),name,contact:mContact.value.trim(),phone:mPhone.value.trim(),cat:mCat.value,status:mStatus.value,note:mNote.value.trim()};if(editId){let i=data.findIndex(v=>v.id===editId);data[i]=obj}else data.unshift(obj);saveStore();d.close();render()}
+function del(id){if(confirm('Delete?')){data=data.filter(v=>v.id!==id);saveStore();render()}}
+function resetData(){if(confirm('Reset to 27?')){localStorage.removeItem('media_management_pro');location.reload()}}
+function exportCSV(){let csv='Name,Category,Contact,Phone,Status\\n'+data.map(x=>`"${x.name}","${x.cat}","${x.contact}","${x.phone}","${x.status}"`).join('\\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='Media_Management.csv';a.click()}
+function exportWA(){let t='*📺 MEDIA MANAGEMENT* ('+data.length+')\\n\\n'+data.map((x,i)=>`${i+1}. ${x.name} - ${x.cat}`).join('\\n');window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
+renderFilters();render();
+</script>
+</body>
+</html>
