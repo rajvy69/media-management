@@ -1,11 +1,15 @@
 {
-  "name": "Media Management Hybrid",
+  "name": "Media Management",
   "short_name": "Media App",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
   "icons": [
-    {"src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png","sizes":"512x512","type":"image/png"}
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
