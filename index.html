@@ -3,74 +3,138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Media Management - Hybrid</title>
+<title>Media Management - Self Managed Final</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4f46e5">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{--p:#4f46e5;--bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0}
+:root{--p:#4f46e5;--bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--green:#10b981}
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:var(--bg);color:var(--text);padding:12px;max-width:480px;margin:auto}
-.header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:16px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:12px;z-index:10}
-.header h1{font-size:18px}.header p{font-size:11px;opacity:.9}
-.sync{font-size:10px;background:rgba(255,255,255,.25);padding:4px 8px;border-radius:20px}
+body{background:var(--bg);color:var(--text);padding:12px;max-width:520px;margin:auto;padding-bottom:90px}
+.header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:16px;border-radius:16px;position:sticky;top:12px;z-index:100}
+.header h1{font-size:18px}
+.event-box{background:rgba(255,255,255,0.15);padding:10px;border-radius:12px;margin-top:10px;display:flex;gap:6px}
+.event-box input{flex:1;padding:10px;border-radius:8px;border:none;font-weight:700;font-size:13px}
+.event-box input:focus{outline:2px solid #fff}
+.sync{font-size:10px;background:rgba(255,255,255,.25);padding:4px 8px;border-radius:20px;display:inline-block;margin-top:6px}
 .sync.online{background:#10b981}
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin:12px 0}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
-.stat b{font-size:20px;display:block}.stat span{font-size:10px;color:var(--muted)}
+.stat b{font-size:18px;display:block}.stat span{font-size:9px;color:var(--muted);font-weight:800}
 .toolbar{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap}
-.toolbar input{flex:1;min-width:140px;padding:10px 12px;border:1px solid var(--border);border-radius:10px}
-.btn{padding:10px 14px;border-radius:10px;border:none;font-weight:600;font-size:12px;cursor:pointer}
-.btn-p{background:var(--p);color:#fff}.btn-g{background:#e2e8f0;color:#334155}.btn-s{background:#10b981;color:#fff}
+.toolbar input.search{flex:1;min-width:140px;padding:10px 12px;border:1px solid var(--border);border-radius:10px}
+.btn{padding:10px 12px;border-radius:10px;border:none;font-weight:700;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.btn-p{background:var(--p);color:#fff}.btn-g{background:#e2e8f0;color:#334155}.btn-s{background:#10b981;color:#fff}.btn-blue{background:#1a73e8;color:#fff}
+.chips{display:flex;gap:6px;overflow:auto;padding-bottom:4px;margin:8px 0}
+.chip{padding:6px 12px;border-radius:20px;border:2px solid var(--border);background:#fff;white-space:nowrap;font-size:11px;font-weight:700;cursor:pointer}
+.chip.active{background:var(--p);color:#fff;border-color:var(--p)}
 .media-list{display:flex;flex-direction:column;gap:8px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;justify-content:space-between;align-items:center}
 .card.present{border-color:#10b981;background:#f0fdf4}
-.check{width:24px;height:24px;border-radius:6px;border:2px solid #cbd5e1;display:grid;place-items:center;cursor:pointer;font-size:14px}
+.card.kit{border-left:5px solid #fbbf24}
+.check{width:32px;height:32px;border-radius:8px;border:2px solid #cbd5e1;display:grid;place-items:center;cursor:pointer;font-size:16px;font-weight:900}
 .check.on{background:#10b981;border-color:#10b981;color:#fff}
-.icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:#fff;display:grid;place-items:center;cursor:pointer}
-.add-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:12px}
-.add-box input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin:6px 0}
+.icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:#fff;display:grid;place-items:center;cursor:pointer;font-size:14px}
+.add-box{background:var(--card);border:2px solid var(--p);border-radius:16px;padding:14px;margin-top:14px;position:relative;z-index:200}
+.add-box b{display:block;margin-bottom:6px}
+.add-box input,.add-box select{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;margin:5px 0;font-size:13px}
+.add-box label{font-size:10px;font-weight:800;color:#64748b;margin-top:6px;display:block}
+.add-box .check-label{font-size:12px;display:flex;align-items:center;gap:6px;margin-top:8px;font-weight:700}
+.fab{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid var(--p);padding:10px;display:flex;gap:8px;z-index:90;max-width:520px;margin:auto}
+.import-info{background:#fffbeb;border:1px solid #fde68a;padding:8px;border-radius:10px;font-size:10px;margin-top:8px;color:#92400e}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:9999;padding:12px}
+.modal-box{background:#fff;width:100%;max-width:420px;border-radius:16px;padding:16px;max-height:90vh;overflow:auto}
+.modal-box input,.modal-box select{width:100%;padding:11px;border-radius:8px;border:2px solid #e2e8f0;margin:5px 0}
 </style>
 </head>
 <body>
 <div class="header">
-<div><h1>Media Management</h1><p>Hybrid • Offline + Auto Sync • 27 Media</p></div>
-<div class="sync online" id="syncStatus">● Offline Ready</div>
+<div style="display:flex;justify-content:space-between;align-items:center"><h1>Media Management</h1><div class="sync online" id="syncStatus">● Offline Ready</div></div>
+<p style="font-size:11px;opacity:.9;margin-top:2px">Self-Managed • Offline + Auto Sync • Excel Import Anytime</p>
+<div class="event-box">
+<input id="eventName" placeholder="Event Name: e.g. UP Foundation Day" oninput="saveEvent()">
+<input id="eventDate" type="date" oninput="saveEvent()">
 </div>
-
+</div>
 <div class="stats">
 <div class="stat"><b id="totalCount">27</b><span>TOTAL</span></div>
 <div class="stat"><b id="presentCount">0</b><span>PRESENT</span></div>
+<div class="stat"><b id="kitCount">0</b><span>KIT GIVEN</span></div>
 <div class="stat"><b id="pendingCount">27</b><span>PENDING</span></div>
 </div>
-
 <div class="toolbar">
-<input id="search" placeholder="🔍 Search media (Dainik...)" oninput="render()">
+<input id="search" class="search" placeholder="🔍 Search name, outlet, mobile..." oninput="render()">
 <button class="btn btn-g" onclick="exportExcel()">⬇ Excel for Client</button>
+<label for="excelFile" class="btn btn-blue">📁 Import Excel</label>
+<input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
 <button class="btn btn-s" onclick="shareBackup()">📤 Backup</button>
 </div>
 
+<div class="import-info">📁 <b>Import anytime:</b> Excel with columns: Name, Mobile, Outlet, Category, Person, Designation, Representing. It will add to existing list, duplicate mobile will be skipped.</div>
+<div class="chips" id="chips"></div>
 <div id="mediaList" class="media-list"></div>
-
 <div class="add-box">
-<b>Add New Media House</b>
-<input id="newName" placeholder="Media Name (e.g. Amar Ujala)">
-<input id="newPerson" placeholder="Person Name">
-<input id="newPhone" placeholder="Phone Number">
-<button class="btn btn-p" style="width:100%;margin-top:6px" onclick="addMedia()">+ Add & Auto-Sync to All Staff</button>
-<p style="font-size:10px;color:#64748b;text-align:center;margin-top:6px">🔒 Only admin can delete</p>
+<b>➕ Add Media (Walk-in / New)</b>
+<label>Media Person Name *</label>
+<input id="newName" placeholder="e.g. Ramesh Kumar">
+<label>Mobile Number *</label>
+<input id="newPhone" placeholder="10 digit mobile" type="tel">
+<label>Media House / Outlet</label>
+<input id="newOutlet" list="outletList" placeholder="e.g. Dainik Bhaskar">
+<datalist id="outletList"></datalist>
+<label>Category</label>
+<select id="newCategory">
+<option value="Print">📰 Print</option>
+<option value="Electronic">📺 Electronic TV</option>
+<option value="Digital">🌐 Digital</option>
+<option value="Radio">📻 Radio</option>
+<option value="Photographer">📸 Photographer</option>
+<option value="Videographer">🎥 Videographer</option>
+</select>
+<label>Actual Person Came (if different from invitee)</label>
+<input id="newPerson" placeholder="e.g. Cameraman Raju">
+<label>Designation</label>
+<select id="newDesig">
+<option value="Reporter">Reporter</option>
+<option value="Cameraperson">Cameraperson</option>
+<option value="Photographer">Photographer</option>
+<option value="Assistant">Assistant / Other</option>
+</select>
+<label>Representing</label>
+<input id="newRep" placeholder="e.g. Representing Ajay - Aaj Tak">
+<div class="check-label"><input type="checkbox" id="newKit"> 🎁 Kit / Gift Given</div>
+<button class="btn btn-p" style="width:100%;margin-top:10px;padding:12px;font-size:13px" onclick="addMedia()">+ Add & Save</button>
+<p style="font-size:10px;color:#64748b;text-align:center;margin-top:6px">You can import 200+ names via Excel button anytime</p>
 </div>
-
-<div style="display:flex;gap:6px;margin:20px 0">
-<button class="btn btn-g" onclick="resetAttendance()">Reset Attendance</button>
-<button class="btn btn-g" onclick="toggleAdmin()">🔐 <span id="adminLabel">Admin: ON</span></button>
+<div class="fab">
+<button class="btn btn-g" style="flex:1;padding:14px" onclick="resetAttendance()">Reset Present</button>
+<button class="btn btn-p" style="flex:1;padding:14px" onclick="document.querySelector('.add-box').scrollIntoView({behavior:'smooth'})">➕ Add Media</button>
 </div>
-
+<!-- Edit Modal -->
+<div class="modal" id="editModal">
+<div class="modal-box">
+<h3 style="margin-bottom:8px">✏️ Edit Media</h3>
+<label>Name *</label><input id="editName">
+<label>Mobile</label><input id="editPhone">
+<label>Outlet</label><input id="editOutlet">
+<label>Category</label><select id="editCategory">
+<option>Print</option><option>Electronic</option><option>Digital</option><option>Radio</option><option>Photographer</option><option>Videographer</option>
+</select>
+<label>Actual Person Came</label><input id="editPerson">
+<label>Designation</label><select id="editDesig"><option>Reporter</option><option>Cameraperson</option><option>Photographer</option><option>Assistant</option></select>
+<label>Representing</label><input id="editRep">
+<div class="check-label"><input type="checkbox" id="editKit"> Kit Given</div>
+<div class="check-label"><input type="checkbox" id="editPresent"> Present ✓</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<button class="btn btn-g" style="flex:1" onclick="closeEdit()">Cancel</button>
+<button class="btn btn-p" style="flex:1" onclick="saveEdit()">Save</button>
+</div>
+<button class="btn" style="width:100%;margin-top:10px;background:#fee2e2;color:#dc2626" onclick="deleteCurrent()">🗑️ Delete This</button>
+</div>
+</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// REPLACE WITH YOUR FIREBASE CONFIG FOR AUTO-SYNC (optional)
-// If you don't replace, app still works 100% offline with ZERO data
 const firebaseConfig = {
   apiKey: "REPLACE_WITH_YOUR_KEY",
   authDomain: "media-hybrid-demo.firebaseapp.com",
@@ -84,99 +148,159 @@ try{
     useCloud=true;
   }
 }catch(e){useCloud=false;}
-
 const DEFAULT_MEDIA = [
-{name:"Dainik Bhaskar"},{name:"Voice of Lucknow"},{name:"Jan Madhyam"},{name:"Lucknow Express"},
-{name:"News 18 UP"},{name:"Zee News UP"},{name:"Aaj Tak"},{name:"ABP Ganga"},
-{name:"Amar Ujala"},{name:"Dainik Jagran"},{name:"Hindustan"},{name:"Rashtriya Sahara"},
-{name:"Swatantra Bharat"},{name:"Pratahkal"},{name:"ETV Bharat"},{name:"Sahara Samay"},
-{name:"News State UP"},{name:"Khabar Fast"},{name:"INH News"},{name:"The Pioneer"},
-{name:"Times of India Lucknow"},{name:"Hindustan Times"},{name:"Navbharat Times"},
-{name:"Qaumi Morcha"},{name:"Awam-e-Hind"},{name:"Lucknow Tribune"},{name:"UP Ki Baat"}
-].map((m,i)=>({...m,person:"",phone:"",id:i,present:false}));
-
-let media = JSON.parse(localStorage.getItem('media_hybrid')||'null') || DEFAULT_MEDIA;
-let isAdmin = localStorage.getItem('isAdmin')!=='false';
+{name:"Dainik Bhaskar",category:"Print"},{name:"Voice of Lucknow",category:"Print"},{name:"Jan Madhyam",category:"Print"},{name:"Lucknow Express",category:"Print"},
+{name:"News 18 UP",category:"Electronic"},{name:"Zee News UP",category:"Electronic"},{name:"Aaj Tak",category:"Electronic"},{name:"ABP Ganga",category:"Electronic"},
+{name:"Amar Ujala",category:"Print"},{name:"Dainik Jagran",category:"Print"},{name:"Hindustan",category:"Print"},{name:"Rashtriya Sahara",category:"Print"},
+{name:"Swatantra Bharat",category:"Print"},{name:"Pratahkal",category:"Print"},{name:"ETV Bharat",category:"Electronic"},{name:"Sahara Samay",category:"Electronic"},
+{name:"News State UP",category:"Electronic"},{name:"Khabar Fast",category:"Electronic"},{name:"INH News",category:"Electronic"},{name:"The Pioneer",category:"Print"},
+{name:"Times of India Lucknow",category:"Print"},{name:"Hindustan Times",category:"Print"},{name:"Navbharat Times",category:"Print"},
+{name:"Qaumi Morcha",category:"Print"},{name:"Awam-e-Hind",category:"Print"},{name:"Lucknow Tribune",category:"Print"},{name:"UP Ki Baat",category:"Digital"}
+].map((m,i)=>({...m,person:"",phone:"",outlet:m.name,desig:"Reporter",rep:"",kit:false,id:i,present:false,time:""}));
+let media = JSON.parse(localStorage.getItem('media_final_v2')||'null') || DEFAULT_MEDIA;
+let categories = ["All","Print","Electronic","Digital","Radio","Photographer","Videographer"];
+let currentFilter = "All";
+let editIndex = null;
+let outlets = [...new Set(media.map(m=>m.outlet||m.name))];
+function saveEvent(){
+  localStorage.setItem('evName', document.getElementById('eventName').value);
+  localStorage.setItem('evDate', document.getElementById('eventDate').value);
+}
+window.saveEvent=saveEvent;
 
 function saveLocal(){
-  localStorage.setItem('media_hybrid', JSON.stringify(media));
+  localStorage.setItem('media_final_v2', JSON.stringify(media));
   if(useCloud && navigator.onLine){
     setDoc(doc(db,"media_list","main"), {data:media, updated:Date.now()}, {merge:true}).catch(()=>{});
     document.getElementById('syncStatus').innerText='● Synced';
-    document.getElementById('syncStatus').className='sync online';
   }else{
-    document.getElementById('syncStatus').innerText='● Offline - Saved Locally';
+    document.getElementById('syncStatus').innerText='● Offline - Saved';
   }
 }
-
+function renderChips(){
+  let c=document.getElementById('chips'); c.innerHTML="";
+  categories.forEach(cat=>{
+    let d=document.createElement('div'); d.className='chip'+(currentFilter===cat?' active':'');
+    d.textContent=cat; d.onclick=()=>{currentFilter=cat; renderChips(); render();}; c.appendChild(d);
+  });
+}
+function renderOutletList(){
+  let dl=document.getElementById('outletList'); dl.innerHTML="";
+  outlets.forEach(o=>{let op=document.createElement('option'); op.value=o; dl.appendChild(op);});
+}
 window.render=function(){
   const q=document.getElementById('search').value.toLowerCase();
   const list=document.getElementById('mediaList');
   list.innerHTML='';
-  let present=0;
+  let present=0, kit=0;
   media.forEach((m,idx)=>{
-    if(q && !m.name.toLowerCase().includes(q)) return;
-    if(m.present) present++;
+    if(currentFilter!=="All" && m.category!==currentFilter) return;
+    if(q && !(`${m.name} ${m.outlet} ${m.phone} ${m.person}`.toLowerCase().includes(q))) return;
+    if(m.present) present++; if(m.kit) kit++;
     const div=document.createElement('div');
-    div.className='card'+(m.present?' present':'');
+    div.className='card'+(m.present?' present':'')+(m.kit?' kit':'');
     div.innerHTML=`
-      <div style="flex:1"><b style="font-size:13px">${m.name}</b><br><small style="font-size:11px;color:#64748b">${m.person||'No person'} • ${m.phone||'No number'}</small></div>
+      <div style="flex:1"><b style="font-size:13px">${m.name}</b> <small style="background:#e0e7ff;padding:2px 6px;border-radius:6px;font-size:10px">${m.category}</small><br>
+      <small style="font-size:11px;color:#64748b">${m.outlet} • ${m.phone||'No number'} ${m.kit?'• 🎁 Kit':''}</small><br>
+      <small style="font-size:11px;color:#334155">${m.person? 'Came: '+m.person+' ('+m.desig+')':''} ${m.rep? '| Rep: '+m.rep:''}</small>
+      ${m.time? `<br><small style="font-size:10px;color:#10b981">${m.time}</small>`:''}
+      </div>
       <div style="display:flex;gap:6px;align-items:center">
         <div class="check ${m.present?'on':''}" onclick="togglePresent(${idx})">${m.present?'✓':''}</div>
+        <button class="icon-btn" onclick="openEdit(${idx})">✏️</button>
         <button class="icon-btn" onclick="callMedia('${m.phone}')">📞</button>
-        <button class="icon-btn" onclick="waMedia('${m.phone}','${m.name}')">💬</button>
-        ${isAdmin?`<button class="icon-btn" onclick="deleteMedia(${idx})">🗑</button>`:''}
       </div>`;
     list.appendChild(div);
   });
   document.getElementById('totalCount').innerText=media.length;
   document.getElementById('presentCount').innerText=present;
+  document.getElementById('kitCount').innerText=kit;
   document.getElementById('pendingCount').innerText=media.length-present;
 }
-
-window.togglePresent=function(i){media[i].present=!media[i].present;saveLocal();render();}
+window.togglePresent=function(i){media[i].present=!media[i].present; media[i].time=media[i].present? new Date().toLocaleString() : ""; saveLocal(); render();}
 window.callMedia=function(p){if(p) window.open('tel:'+p); else alert('No number');}
-window.waMedia=function(p,name){if(!p){alert('No number');return;} let msg=encodeURIComponent(`Hi ${name}, thanks for coverage - Raj Media`); window.open(`https://wa.me/${p.replace(/\D/g,'')}?text=${msg}`,'_blank');}
 window.addMedia=function(){
   const n=document.getElementById('newName').value.trim();
-  const per=document.getElementById('newPerson').value.trim();
   const ph=document.getElementById('newPhone').value.trim();
-  if(!n){alert('Enter media name');return;}
-  media.push({id:Date.now(),name:n,person:per,phone:ph,present:false});
-  document.getElementById('newName').value='';document.getElementById('newPerson').value='';document.getElementById('newPhone').value='';
-  saveLocal();render();
+  const outlet=document.getElementById('newOutlet').value.trim()||n;
+  if(!n){alert('Enter name');return;}
+  if(ph && media.some(x=>x.phone==ph && ph!="")){ if(!confirm('Mobile already exists! Add anyway?')) return; }
+  media.push({id:Date.now(),name:n,phone:ph,outlet:outlet,category:document.getElementById('newCategory').value,person:document.getElementById('newPerson').value.trim(),desig:document.getElementById('newDesig').value,rep:document.getElementById('newRep').value.trim(),kit:document.getElementById('newKit').checked,present:false,time:""});
+  if(outlet && !outlets.includes(outlet)) outlets.push(outlet);
+  document.getElementById('newName').value='';document.getElementById('newPhone').value='';document.getElementById('newOutlet').value='';document.getElementById('newPerson').value='';document.getElementById('newRep').value='';document.getElementById('newKit').checked=false;
+  saveLocal();renderOutletList();render();
 }
-window.deleteMedia=function(i){if(!isAdmin) return; if(confirm('Delete '+media[i].name+'?')){media.splice(i,1);saveLocal();render();}}
-window.resetAttendance=function(){if(confirm('Reset all Present?')){media.forEach(m=>m.present=false);saveLocal();render();}}
-window.toggleAdmin=function(){isAdmin=!isAdmin;localStorage.setItem('isAdmin',isAdmin);document.getElementById('adminLabel').innerText='Admin: '+(isAdmin?'ON':'OFF');render();}
+window.openEdit=function(i){
+  editIndex=i; let m=media[i];
+  document.getElementById('editName').value=m.name;
+  document.getElementById('editPhone').value=m.phone;
+  document.getElementById('editOutlet').value=m.outlet;
+  document.getElementById('editCategory').value=m.category||"Print";
+  document.getElementById('editPerson').value=m.person;
+  document.getElementById('editDesig').value=m.desig;
+  document.getElementById('editRep').value=m.rep;
+  document.getElementById('editKit').checked=m.kit;
+  document.getElementById('editPresent').checked=m.present;
+  document.getElementById('editModal').style.display='flex';
+}
+window.closeEdit=function(){document.getElementById('editModal').style.display='none';}
+window.saveEdit=function(){
+  let m=media[editIndex];
+  m.name=document.getElementById('editName').value.trim();
+  m.phone=document.getElementById('editPhone').value.trim();
+  m.outlet=document.getElementById('editOutlet').value.trim();
+  m.category=document.getElementById('editCategory').value;
+  m.person=document.getElementById('editPerson').value.trim();
+  m.desig=document.getElementById('editDesig').value;
+  m.rep=document.getElementById('editRep').value.trim();
+  m.kit=document.getElementById('editKit').checked;
+  m.present=document.getElementById('editPresent').checked;
+  saveLocal();closeEdit();render();
+}
+window.deleteCurrent=function(){if(confirm('Delete '+media[editIndex].name+'?')){media.splice(editIndex,1); saveLocal(); closeEdit(); render();}}
+window.resetAttendance=function(){if(confirm('Reset all Present & Kit?')){media.forEach(m=>{m.present=false; m.kit=false; m.time="";});saveLocal();render();}}
 window.exportExcel=function(){
-  let csv="S.No,Media Name,Person,Phone,Attendance,Date\n";
-  const date=new Date().toLocaleDateString();
-  media.forEach((m,i)=>{csv+=`${i+1},"${m.name}","${m.person}","${m.phone}",${m.present?'Present':'Absent'},${date}\n`;});
-  const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=`Attendance_${date}.csv`;a.click();
+  let evN=document.getElementById('eventName').value||"Event";
+  let evD=document.getElementById('eventDate').value||new Date().toISOString().split('T')[0];
+  let rows=[["Event Name",evN],["Event Date",evD],[],["S.No","Media Person","Mobile","Media House","Category","Actual Person Came","Designation","Representing","Present","Kit Given","Time"]];
+  media.forEach((m,i)=>rows.push([i+1,m.name,m.phone,m.outlet,m.category,m.person,m.desig,m.rep,m.present?'Yes':'No',m.kit?'Yes':'No',m.time]));
+  let ws=XLSX.utils.aoa_to_sheet(rows); let wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Attendance");
+  XLSX.writeFile(wb, `${evN}_${evD}_Attendance.xlsx`);
 }
 window.shareBackup=function(){
   const data=JSON.stringify(media);const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=`backup.json`;a.click();
 }
-
-if(useCloud){
-  onSnapshot(doc(db,"media_list","main"), (snap)=>{
-    if(snap.exists()){
-      const cloudData=snap.data().data;
-      if(cloudData && cloudData.length>media.length){
-        media=cloudData;
-        localStorage.setItem('media_hybrid', JSON.stringify(media));
-        render();
-        document.getElementById('syncStatus').innerText='● Auto-Updated from Cloud';
-      }
-    }
-  });
+window.importExcel=function(e){
+  let file=e.target.files[0]; if(!file) return;
+  let reader=new FileReader();
+  reader.onload=function(evt){
+    try{
+      let wb=XLSX.read(evt.target.result,{type:'binary'});
+      let sheet=wb.Sheets[wb.SheetNames[0]];
+      let json=XLSX.utils.sheet_to_json(sheet);
+      let count=0, skip=0;
+      json.forEach(r=>{
+        let name=r.Name||r.name||r.NAME||r['Media Person']||r['Media Name']||"";
+        if(!name) return;
+        let mobile=(r.Mobile||r.mobile||r.MOBILE||r.Phone||r.phone||"").toString().trim();
+        if(mobile && media.some(x=>x.phone==mobile && mobile!="")){ skip++; return; }
+        let outlet=r.Outlet||r.outlet||r['Media House']||r['Media']||name;
+        media.push({id:Date.now()+Math.random(), name:name, phone:mobile, outlet:outlet, category:r.Category||r.category||"Print", person:r.Person||r['Actual Person']||r['Person Came']||"", desig:r.Designation||r.designation||"Reporter", rep:r.Representing||r.representing||"", present:false, kit:false, time:""});
+        if(outlet && !outlets.includes(outlet)) outlets.push(outlet);
+        count++;
+      });
+      saveLocal(); renderOutletList(); render();
+      alert(count+' imported, '+skip+' duplicates skipped');
+    }catch(err){ alert('Error: '+err.message); }
+  };
+  reader.readAsBinaryString(file);
+  e.target.value="";
 }
+document.getElementById('eventName').value=localStorage.getItem('evName')||"";
+document.getElementById('eventDate').value=localStorage.getItem('evDate')|| new Date().toISOString().split('T')[0];
+renderChips(); renderOutletList(); render();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
-render();
-document.getElementById('adminLabel').innerText='Admin: '+(isAdmin?'ON':'OFF');
 </script>
 </body>
 </html>
